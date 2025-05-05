@@ -1,0 +1,3 @@
+# Ignore processed large CSV files
+data/processed/t20s_combined.csv
+data/processed/ipl_combined.csv
