@@ -82,43 +82,72 @@ if app_mode == "\U0001F3CF Wicket Type Prediction":
             st.error("⚠️ Please fill in all fields.")
 
 # --- PLAYER SCORE PREDICTION UI (placeholder for now) ---
+# --- PLAYER SCORE PREDICTION UI ---
 elif app_mode == "\U0001F4C8 Player Score Prediction":
     st.subheader("Player Score Prediction")
     st.info("This module will estimate how many runs a batter might score based on history and match conditions.")
 
-    rf_model = joblib.load("../models/random_forest_model.pkl")
+    # Load model and expected feature columns
+    model = joblib.load("player_score_model/score_model.pkl")
+    feature_names = joblib.load("player_score_model/feature_names.pkl")
 
-    # Inputs
+    # UI Inputs
     batter = st.selectbox("Select Batter", batters)
     batting_team = st.selectbox("Select Batting Team", batting_teams)
     bowling_team = st.selectbox("Select Bowling Team", bowling_teams)
     venue = st.selectbox("Select Venue", venues)
-    n_matches = st.slider("Number of recent matches to consider for form", 1, 20, 5)
+    recent_matches = st.slider("Number of recent matches to consider for form", 1, 20, 5)
 
     if st.button("Predict Score"):
-        recent_matches = dropdown_df[dropdown_df["striker"] == batter].sort_values("match_id", ascending=False)
-        unique_match_ids = recent_matches["match_id"].drop_duplicates().head(n_matches)
-        match_scores = []
+        # Compute batter form from most recent matches
+        df = dropdown_df.copy()
+        df['start_date'] = pd.to_datetime(df['start_date'], errors='coerce')
+        df = df.dropna(subset=['start_date'])
 
-        for mid in unique_match_ids:
-            match_runs = recent_matches[recent_matches["match_id"] == mid]["runs_off_bat"].sum()
-            match_scores.append(match_runs)
+        recent_runs = (
+            df[df['striker'] == batter]
+            .sort_values(by='start_date', ascending=False)
+            .head(recent_matches)['runs_off_bat']
+        )
+        batter_form = recent_runs.mean() if not recent_runs.empty else 0.0
 
-        batter_form = np.mean(match_scores) if match_scores else 0
+        # Build input row
+        input_df = pd.DataFrame([{
+            "batter_form": batter_form,
+            "batting_team": batting_team,
+            "bowling_team": bowling_team,
+            "venue": venue,
+        }])
 
-        input_df = pd.DataFrame({
-            "batter_form": [batter_form],
-            "batting_team": [batting_team],
-            "bowling_team": [bowling_team],
-            "venue": [venue]
-        })
+        # --- CRUCIAL: Concatenate with template to ensure all dummies ---
+        # Take N random rows from dropdown_df, drop columns except categorical, fill with NaN for batter_form
+        template = dropdown_df[['batting_team', 'bowling_team', 'venue']].drop_duplicates().copy()
+        template['batter_form'] = np.nan
+        template = template[['batter_form', 'batting_team', 'bowling_team', 'venue']]
+        full_input = pd.concat([template, input_df], ignore_index=True)
 
-        # Ensure categorical columns are consistent
-        for col in ["batting_team", "bowling_team", "venue"]:
-            input_df[col] = input_df[col].astype("category")
+        # One-hot encode as during training
+        input_encoded = pd.get_dummies(full_input)
+        input_encoded = input_encoded.tail(1)  # Select only the user row
 
+        # Align to model feature columns
+        input_encoded = input_encoded.reindex(columns=feature_names, fill_value=0)
+
+        # Predict
         try:
-            predicted_score = rf_model.predict(input_df)[0]
-            st.success(f"\U0001F3CF Predicted Score: `{predicted_score:.1f}` runs")
+            prediction = model.predict(input_encoded)[0]
+            st.success(f"🎯 Predicted Score: **{prediction:.1f} runs**")
+
+            with st.expander("Show Encoded Input Row (Debug)"):
+                st.dataframe(input_encoded)
+                st.write("batter_form:", batter_form)
+
         except Exception as e:
-            st.error(f"Prediction failed: {str(e)}")
+            st.error(f"⚠️ Prediction failed: {e}")
+            st.write("Input DataFrame:")
+            st.write(input_encoded)
+            st.write("Expected features:", feature_names)
+
+
+
+
