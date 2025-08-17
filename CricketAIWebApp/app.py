@@ -127,8 +127,21 @@ strategy_mapping = load_strategy_map(STRATEGY_JSON)
 
 
 # ---------- Header / Hero ----------
-col_logo, col_title = st.columns([1, 2], vertical_alignment="center")
+# Use vertical_alignment only if the running Streamlit supports it
+def columns_center(specs):
+    try:
+        if "vertical_alignment" in inspect.signature(st.columns).parameters:
+            return st.columns(specs, vertical_alignment="center")
+    except Exception:
+        pass
+    # Fallback: no vertical_alignment -> use CSS flex centering inside each column
+    return st.columns(specs)
+
+col_logo, col_title = columns_center([1, 2])
+
 with col_logo:
+    st.markdown('<div style="display:flex;align-items:center;justify-content:center;">',
+                unsafe_allow_html=True)
     if GIF_PATH.exists():
         image_fluid(GIF_PATH)
     else:
@@ -136,12 +149,17 @@ with col_logo:
             """
             <div class="hero glass" style="text-align:center;">
               <div style="font-size:3rem;">🏏</div>
-              <div style="margin-top:.25rem; opacity:.75;">Add <code>assets/stumps.gif</code> to show an animated header.</div>
+              <div style="margin-top:.25rem; opacity:.75;">
+                Add <code>assets/stumps.gif</code> to show an animated header.
+              </div>
             </div>
             """,
             unsafe_allow_html=True
         )
+    st.markdown('</div>', unsafe_allow_html=True)
+
 with col_title:
+    st.markdown('<div style="display:flex;align-items:center;">', unsafe_allow_html=True)
     st.markdown(
         """
         <div class="hero">
@@ -156,9 +174,9 @@ with col_title:
         """,
         unsafe_allow_html=True
     )
-st.write("")
+    st.markdown('</div>', unsafe_allow_html=True)
 
-
+    
 # ---------- Sidebar navigation ----------
 st.sidebar.header("Navigation")
 app_mode = st.sidebar.radio(
