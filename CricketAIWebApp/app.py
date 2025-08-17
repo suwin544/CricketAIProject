@@ -127,7 +127,7 @@ strategy_mapping = load_strategy_map(STRATEGY_JSON)
 
 
 # ---------- Header / Hero ----------
-col_logo, col_title = st.columns([1, 2])  # remove vertical_alignment for Streamlit<=1.35
+col_logo, col_title = st.columns([1, 2], vertical_alignment="center")
 with col_logo:
     if GIF_PATH.exists():
         image_fluid(GIF_PATH)
