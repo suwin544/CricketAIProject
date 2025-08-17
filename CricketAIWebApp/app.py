@@ -7,7 +7,7 @@ import joblib
 import numpy as np
 import pandas as pd
 
-# ---- Optional: TensorFlow (LSTM) guard ----
+# ---TensorFlow (LSTM) guard ---
 try:
     import tensorflow as tf
     from keras.preprocessing.sequence import pad_sequences
@@ -18,7 +18,7 @@ except Exception:
     pad_sequences = None
 
 
-# ---------- Helpers ----------
+# --- Helpers ---
 def image_fluid(path):
     """Show an image full-width across Streamlit versions; accepts Path or str."""
     path = str(path)
@@ -127,7 +127,7 @@ strategy_mapping = load_strategy_map(STRATEGY_JSON)
 
 
 # ---------- Header / Hero ----------
-col_logo, col_title = st.columns([1, 2], vertical_alignment="center")
+col_logo, col_title = st.columns([1, 2])  # remove vertical_alignment for Streamlit<=1.35
 with col_logo:
     if GIF_PATH.exists():
         image_fluid(GIF_PATH)
