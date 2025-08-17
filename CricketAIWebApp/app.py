@@ -209,8 +209,7 @@ app_mode = st.sidebar.radio(
 )
 with st.sidebar.expander("About this app", expanded=False):
     st.write(
-        "Refreshed UI with larger typography, cleaner forms, and an optional header GIF. "
-        "Add your GIF at `assets/stumps.gif`."
+        "Cricket AI system using ball by ball data with the capabilities for wicket and score prediction"
     )
 
 
