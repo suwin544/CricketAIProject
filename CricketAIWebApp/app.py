@@ -148,10 +148,13 @@ def columns_center(specs):
 col_logo, col_title = columns_center([1, 2])
 
 with col_logo:
-    st.markdown('<div style="display:flex;align-items:center;justify-content:center;">',
-                unsafe_allow_html=True)
+    # Center the image and cap its width so it aligns with the hero box
+    st.markdown(
+        '<div style="display:flex;align-items:center;justify-content:center;height:100%;">',
+        unsafe_allow_html=True
+    )
     if GIF_PATH.exists():
-        image_fluid(GIF_PATH, width=200)
+        image_header(GIF_PATH, width=200)   # tweak 180–220 to taste
     else:
         st.markdown(
             """
