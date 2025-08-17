@@ -8,14 +8,20 @@ import numpy as np
 import pandas as pd
 
 # ---TensorFlow (LSTM) guard ---
+# ---TensorFlow (LSTM) guard ---
 try:
     import tensorflow as tf
-    from keras.preprocessing.sequence import pad_sequences
+    # Try Keras-3 first; fall back to tf.keras for pad_sequences
+    try:
+        from keras.preprocessing.sequence import pad_sequences  # Keras 3 compat
+    except Exception:
+        from tensorflow.keras.preprocessing.sequence import pad_sequences  # TF 2.x compat
     TF_AVAILABLE = True
 except Exception:
     TF_AVAILABLE = False
     tf = None
     pad_sequences = None
+
 
 
 # --- Helpers ---
@@ -253,11 +259,32 @@ if app_mode == "🏏 Wicket Type Prediction":
             with st.spinner("Loading model & encoders..."):
                 @st.cache_resource(show_spinner=False)
                 def load_wicket_stack():
-                    mdl = tf.keras.models.load_model(str(LSTM_MODEL))
+                    # Load tokenizers/encoders first (small/fast)
                     tok = joblib.load(str(TOKENIZER_PKL))
-                    le = joblib.load(str(LBLENC_PKL))
-                    return mdl, tok, le
-                model, tokenizer, label_encoder = load_wicket_stack()
+                    le  = joblib.load(str(LBLENC_PKL))
+
+                    # Try Keras 3 (safe_mode=False handles newer config like 'batch_shape')
+                    model = None
+                    engine = None
+                    try:
+                        import keras as K
+                        model = K.models.load_model(str(LSTM_MODEL), safe_mode=False)
+                        engine = "keras3"
+                    except Exception as e_keras3:
+                        # Fallback to tf.keras 2.x
+                        try:
+                            import tensorflow as tf
+                            model = tf.keras.models.load_model(str(LSTM_MODEL))
+                            engine = "tf.keras"
+                        except Exception as e_tf:
+                            raise RuntimeError(
+                                "Could not load LSTM model with Keras 3 or tf.keras.\n"
+                                f"Keras3 error: {e_keras3}\nTF error: {e_tf}"
+                            )
+                    return model, tok, le, engine
+
+                model, tokenizer, label_encoder, engine = load_wicket_stack()
+                st.caption(f"Model engine: {engine}")
 
             context_string = (
                 f"Batsman: {batter_name} | Non-striker: {non_striker_name} | "
