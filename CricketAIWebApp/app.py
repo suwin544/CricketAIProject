@@ -27,6 +27,14 @@ def image_fluid(path):
     except TypeError:
         st.image(path, use_column_width=True)
 
+def image_header(path, width=180):
+    """Show header image at a fixed pixel width (version-proof)."""
+    try:
+        st.image(str(path), width=width)  # works on old/new Streamlit
+    except TypeError:
+        st.image(str(path))               # ultra-old fallback
+
+
 
 # ---------- Page config & global styling ----------
 st.set_page_config(
@@ -143,7 +151,7 @@ with col_logo:
     st.markdown('<div style="display:flex;align-items:center;justify-content:center;">',
                 unsafe_allow_html=True)
     if GIF_PATH.exists():
-        image_fluid(GIF_PATH)
+        image_fluid(GIF_PATH, width=200)
     else:
         st.markdown(
             """
@@ -176,7 +184,7 @@ with col_title:
     )
     st.markdown('</div>', unsafe_allow_html=True)
 
-    
+
 # ---------- Sidebar navigation ----------
 st.sidebar.header("Navigation")
 app_mode = st.sidebar.radio(
