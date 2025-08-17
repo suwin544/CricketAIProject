@@ -225,6 +225,7 @@ def metric_row(cols: int = 3, items=None):
 # ---------- Wicket Type Prediction ----------
 if app_mode == "🏏 Wicket Type Prediction":
     if not TF_AVAILABLE or not (LSTM_MODEL.exists() and TOKENIZER_PKL.exists() and LBLENC_PKL.exists()):
+        st.sidebar.caption("Wicket prediction is disabled on the cloud demo.")
         st.warning("This feature is disabled for this deployment (TensorFlow/artifacts not available).")
     else:
         st.subheader("Wicket Type Prediction")
