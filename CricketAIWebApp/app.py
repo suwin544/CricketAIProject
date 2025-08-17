@@ -34,6 +34,20 @@ def image_header(path, width=180):
     except TypeError:
         st.image(str(path))               # ultra-old fallback
 
+import base64
+
+def gif_inline(path, width=200):
+    """Embed an animated GIF via <img> so it always plays."""
+    path = str(path)
+    with open(path, "rb") as f:
+        data = f.read()
+    b64 = base64.b64encode(data).decode("utf-8")
+    st.markdown(
+        f"<img src='data:image/gif;base64,{b64}' width='{width}' style='display:block;margin:auto;'/>",
+        unsafe_allow_html=True,
+    )
+
+
 
 
 # ---------- Page config & global styling ----------
@@ -148,26 +162,24 @@ def columns_center(specs):
 col_logo, col_title = columns_center([1, 2])
 
 with col_logo:
-    # Center the image and cap its width so it aligns with the hero box
-    st.markdown(
-        '<div style="display:flex;align-items:center;justify-content:center;height:100%;">',
-        unsafe_allow_html=True
-    )
-    if GIF_PATH.exists():
-        image_header(GIF_PATH, width=200)   # tweak 180–220 to taste
+    st.markdown('<div style="display:flex;align-items:center;justify-content:center;height:100%;">',
+                unsafe_allow_html=True)
+    if GIF_PATH.exists() and GIF_PATH.suffix.lower()==".gif":
+        gif_inline(GIF_PATH, width=200)   # adjust 180–220 to taste
+    elif GIF_PATH.exists():
+        image_fluid(GIF_PATH, width=200)  # non-gif fallback
     else:
         st.markdown(
             """
             <div class="hero glass" style="text-align:center;">
               <div style="font-size:3rem;">🏏</div>
-              <div style="margin-top:.25rem; opacity:.75;">
-                Add <code>assets/stumps.gif</code> to show an animated header.
-              </div>
+              <div style="margin-top:.25rem; opacity:.75;">Add <code>assets/stumps.gif</code>.</div>
             </div>
             """,
             unsafe_allow_html=True
         )
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 with col_title:
     st.markdown('<div style="display:flex;align-items:center;">', unsafe_allow_html=True)
