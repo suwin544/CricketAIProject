@@ -204,7 +204,7 @@ with col_title:
 st.sidebar.header("Navigation")
 app_mode = st.sidebar.radio(
     "Choose a feature",
-    ["🏏 Wicket Type Prediction", "📈 Player Score Prediction"],
+    ["📈 Player Score Prediction", "🏏 Wicket Type Prediction"],
     index=0,
 )
 with st.sidebar.expander("About this app", expanded=False):
